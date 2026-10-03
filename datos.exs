@@ -2,13 +2,15 @@ defmodule Datos do
 
     def main do
 
-        map_confeccionistas = confeccionistas()
-        map_lotes = lotes()
-        map_lineas = lineas()
+         confeccionistas = confeccionistas()
+         lotes = lotes()
+         lineas = lineas()
+
+         lotes_clasificados = Validacion.validar_lotes(lotes, confeccionistas, lineas)
+        IO.inspect(lotes_clasificados)
 
 
-        lotes_validados = Validacion.validar_lotes(map_lotes, map_confeccionistas, map_lineas)
-        IO.inspect(lotes_validados)
+
 
     end
 
