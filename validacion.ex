@@ -5,14 +5,14 @@ defmodule Validacion do
   def validar_lotes(lotes, confeccionistas, lineal) do
     lotes = Enum.map(lotes, fn lote -> validar_lote(lote, confeccionistas, lineal) end)
     validos = for {_lote, {:ok,:lote}} <- lotes, do: {:ok, lote}
-    rechazados = for {_lote, {:error, _razon}} <- lotes, do: {:error, lote, _razon}     #lote es requerido para Reporte_1
+    rechazados = for {lote, {:error, razon}} <- lotes, do: {:error, lote, razon}     #lote es requerido para Reporte_1
     {validos, rechazados}
   end
 
   # creacion de lote adicional a partir de un comando en texto valido como parametro
   # C03;L2;3;75;1.5 -> {:ok, lote}
   def lote_adicional(texto) when is_binary(texto) do
-    campos = texto |> String.split(";") |> Enum.map()(&String.trim/1)     #separa y depura espacios
+    campos = texto |> String.split(";") |> Enum.map(&String.trim/1)     #separa y depura espacios
 
     case campos do
       [confeccionista, linea, dia, prendas, defectos] ->
@@ -36,7 +36,7 @@ defmodule Validacion do
   end
 
   #guarda
-  def parsear_lote_adicional(_), do: {:error, :formato_invalido}
+  def lote_adicional(_), do: {:error, :formato_invalido}
 
    def validar_lote(lote, confeccionistas, lineas) do
     with :ok <- validar_confeccionista(lote, confeccionistas),
@@ -87,8 +87,5 @@ defmodule Validacion do
       {:error, :porcentaje_invalido}
     end
   end
-
-
-
 
 end
