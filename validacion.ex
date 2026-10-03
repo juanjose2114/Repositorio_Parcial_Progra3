@@ -11,7 +11,7 @@ defmodule Validacion do
 
   # creacion de lote adicional a partir de un comando en texto valido como parametro
   # C03;L2;3;75;1.5 -> {:ok, lote}
-  def lote_adicional(texto) is_binary(texto) do
+  def lote_adicional(texto) when is_binary(texto) do
     campos = texto |> String.split(";") |> Enum.map()(&String.trim/1)     #separa y depura espacios
 
     case campos do
