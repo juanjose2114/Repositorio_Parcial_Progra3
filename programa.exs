@@ -11,15 +11,28 @@ defmodule Programa do
   #R1
   # Lotes rechazados con su motivo y cantidad de rechazos por cada motivo.
   def r1 do
-
+    rechazados = 1
+    Enum.group_by(&(&1.motivo), &(&1.lote))
+    |>Enum.map(rechazados, fn {motivo, lotes} -> {motivo, length(lotes)} end)
+    |>Map.new()
   end
 
   #R2
   # Prendas elaboradas por línea y productividad semanal en prendas por puesto
   # (prendas / puestos), ordenadas de mayor a menor productividad. Las líneas sin
   # lotes válidos deben aparecer con cero prendas.
-  def r2 do
-
+  def r2(lineas) do
+    #prendas por linea
+    lotes_por_linea = Enum.group_by(&(&1.lote), &(&1.linea))
+    Enum.map(lotes_por_linea, fn {linea, lotes} -> {linea, length(lotes)} end)
+    
+    total_prendas = Enum.reduce(lotes_por_linea, 0, fn {linea, lotes}, acc -> acc + lote.prendas end)
+    
+    
+    #prendas en semana por puesto 
+    #ordenadas de mayor a menor
+    #las lineas sin lotes validos deben aparecer con cero prendas
+    por_dia = Enum.group_by(&(&1.lote), &(&1.dia))
   end
 
   #R3
