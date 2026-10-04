@@ -25,11 +25,11 @@ defmodule Programa do
     #prendas por linea
     lotes_por_linea = Enum.group_by(&(&1.lote), &(&1.linea))
     Enum.map(lotes_por_linea, fn {linea, lotes} -> {linea, length(lotes)} end)
-    
+
     total_prendas = Enum.reduce(lotes_por_linea, 0, fn {linea, lotes}, acc -> acc + lote.prendas end)
-    
-    
-    #prendas en semana por puesto 
+
+
+    #prendas en semana por puesto
     #ordenadas de mayor a menor
     #las lineas sin lotes validos deben aparecer con cero prendas
     por_dia = Enum.group_by(&(&1.lote), &(&1.dia))
