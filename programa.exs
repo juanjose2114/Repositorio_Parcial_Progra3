@@ -1,11 +1,13 @@
 defmodule Programa do
 
   def main do
-
     lotes_validados = Validacion.validar_lotes(Datos.lotes, Datos.confeccionistas, Datos.lineas)   #lotes_validos es una tupla con lotes validos y rechazados
-
     menu(lotes_validados)
+  end
 
+  def main (lotes) do #polimorfismo para agregar un lote adicional
+    lotes_validados = Validacion.validar_lotes(lotes, Datos.confeccionistas, Datos.lineas)
+    menu(lotes_validados)
   end
 
   def menu(lotes_validados) do
@@ -21,6 +23,7 @@ defmodule Programa do
       6. Confeccionista con mejor calidad: menor porcentaje de defectos ponderado
       7. Total que debe pagar el taller durante la semana y costo promedio pagado por
       8. Confeccionistas que elaboraron al menos un lote válido en todas las
+      9. agregar lote adicional
       9. Salir
     """)
 
@@ -35,7 +38,8 @@ defmodule Programa do
       "6" -> r6()
       "7" -> r7()
       "8" -> r8()
-      "9" -> Util.mostrar_mensaje("\n Saliendo del programa.")
+      "9" -> agregar_lote_adicional()
+      "10" -> Util.mostrar_mensaje("\n Saliendo del programa.")
       _ ->
         Util.mostrar_error("Opcion invalida")
         menu(lotes_validados)        #recursividad UNICAMENTE por comodidad, perdonaran este terrible pecado :_(
@@ -104,6 +108,16 @@ defmodule Programa do
   # producción. Si no hay ninguno, debe indicarse.
   def r8 do
 
+  end
+
+  def agregar_lote_adicional do
+    lotes = Datos.lotes
+
+    lote_adicional = Util.ingresar("Ingrese un lote adicional (confeccionista;linea;dia;prendas;defectos) Ej: C03;L2;4;85;3.5 \n", :texto)
+
+    lotes = lotes ++ [lote_adicional]
+
+    main(lotes)
   end
 end
 
