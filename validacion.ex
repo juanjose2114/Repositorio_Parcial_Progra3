@@ -1,152 +1,57 @@
 defmodule Validacion do
-  def validar_lotes(lotes, confeccionistas, lineas) do
-     {lista_validos, lista_invalidos} =
-      Enum.reduce(lotes, {[], []}, fn lote, {lista_validos, lista_invalidos} ->
-       resultado =
-         with {:ok, lote} <- validar_confeccionista(lote, confeccionistas),
-              {:ok, lote} <- validar_linea(lote, lineas),
-              {:ok, lote} <- validar_dia(lote),
-              {:ok, lote} <- validar_prendas_rango(lote),
-              {:ok, lote} <- validar_porcentaje(lote) do
-           {:ok, lote}
-         end
+  @moduledoc """
+  Módulo de validación pura de lotes (Regla 1).
+  """
 
-       case resultado do
-         {:ok, lote} ->
-           {[{:ok, lote} | lista_validos], lista_invalidos}
-         {:error, motivo, lote} ->
-           {lista_validos, [{:error, motivo, lote} | lista_invalidos]}
-       end
-     end)
-
-    texto = IO.gets("Ingrese un lote adicional (confeccionista;linea;dia;prendas;defectos)
-            o Enter para omitir:")
-
-    lote_adicion =
-      case String.trim(texto) do
-        "" -> IO.puts("Se omitio el lote adicional...")
-        :omitido
-        texto -> lote_adicional(texto, confeccionistas, lineas)
-      end
-
-    case lote_adicion do
-
-      :omitido -> {lista_validos, lista_invalidos}
-
-      {:error, :formato_invalido} -> {lista_validos, lista_invalidos}
-
-      {:ok, lote_adicion} ->
-        IO.puts("Lote validado y agregado correctamente...")
-        {[{:ok, lote_adicion} | lista_validos], lista_invalidos}
-
-      {:error, motivo, lote_adicion} ->
-        IO.puts("Lote invalido, moviendo a rechazados...")
-        {lista_validos, [{:error, motivo, lote_adicion} | lista_invalidos]}
-    end
-  end
-
-  def lote_adicional(texto, confeccionistas, lineas) when is_binary(texto) do
-    campos = texto |> String.split(";") |> Enum.map(&String.trim/1)
-
-    adicional =
-      case campos do
-        [confeccionista, linea, dia, prendas, defectos] ->
-          with {dia, ""} <- Integer.parse(dia),
-               {prendas, ""} <- Integer.parse(prendas),
-               {defectos, ""} <- Float.parse(defectos) do
-            %{
-              confeccionista: confeccionista,
-              linea: linea,
-              dia: dia,
-              prendas: prendas,
-              defectos: defectos
-            }
-          else
-            _ -> {:error, :formato_invalido}
-          end
-
-        _ ->
-          {:error, :formato_invalido}
-      end
-
-    case adicional do
-      {:error, :formato_invalido} ->
-        IO.puts("Formato invalido, intente nuevamente...")
-        {:error, :formato_invalido}
-
-      adicional ->
-        validar_lote(adicional, confeccionistas, lineas)
-    end
-  end
-
-  def validar_lote(lote, confeccionistas, lineas) do
-    resultado =
-      with {:ok, lote} <- validar_confeccionista(lote, confeccionistas),
-           {:ok, lote} <- validar_linea(lote, lineas),
-           {:ok, lote} <- validar_dia(lote),
-           {:ok, lote} <- validar_prendas_rango(lote),
-           {:ok, lote} <- validar_porcentaje(lote) do
-        {:ok, lote}
-      end
-
-    case resultado do
-      {:ok, lote} ->
-        {:ok, lote}
-
-      {:error, motivo, lote} ->
-        {:error, motivo, lote}
-    end
-  end
-
-  def validar_confeccionista(lote, confeccionistas) do
-    if Enum.any?(confeccionistas, fn x -> x.codigo == lote.confeccionista end) do
+  def validar_lote(lote, confeccionistas_map, lineas_map) do
+    with :ok <- verificar_confeccionista(lote[:confeccionista], confeccionistas_map),
+         :ok <- verificar_linea(lote[:linea], lineas_map),
+         :ok <- verificar_dia(lote[:dia]),
+         :ok <- verificar_prendas(lote[:prendas]),
+         :ok <- verificar_defectos(lote[:defectos]) do
       {:ok, lote}
     else
-      {:error, :confeccionista_desconocido, lote}
+      {:error, motivo} -> {:error, motivo}
     end
   end
 
-  def validar_linea(lote, lineas) do
-    if Enum.any?(lineas, fn x -> x.id == lote.linea end) do
-      {:ok, lote}
+  defp verificar_confeccionista(codigo, confeccionistas_map) do
+    if is_binary(codigo) and Map.has_key?(confeccionistas_map, codigo) do
+      :ok
     else
-      {:error, :linea_desconocida, lote}
+      {:error, :confeccionista_desconocido}
     end
   end
 
-  def validar_dia(lote) do
-    if is_integer(lote.dia) do
-      if lote.dia >= 1 and lote.dia <= 6 do
-        {:ok, lote}
-      else
-        {:error, :dia_invalido, lote}
-      end
+  defp verificar_linea(linea_id, lineas_map) do
+    if is_binary(linea_id) and Map.has_key?(lineas_map, linea_id) do
+      :ok
     else
-      {:error, :dia_invalido, lote}
+      {:error, :linea_desconocida}
     end
   end
 
-  def validar_prendas_rango(lote) do
-    if is_integer(lote.prendas) do
-      if lote.prendas >= 1 and lote.prendas <= 180 do
-        {:ok, lote}
-      else
-        {:error, :prendas_fuera_de_rango, lote}
-      end
+  defp verificar_dia(dia) do
+    if is_integer(dia) and dia >= 1 and dia <= 6 do
+      :ok
     else
-      {:error, :prendas_fuera_de_rango, lote}
+      {:error, :dia_invalido}
     end
   end
 
-  def validar_porcentaje(lote) do
-    if is_float(lote.defectos) do
-      if lote.defectos >= 0 and lote.prendas <= 100 do
-        {:ok, lote}
-      else
-        {:error, :porcentaje_invalido, lote}
-      end
+  defp verificar_prendas(prendas) do
+    if is_integer(prendas) and prendas >= 1 and prendas <= 180 do
+      :ok
     else
-      {:error, :porcentaje_invalido, lote}
+      {:error, :prendas_fuera_de_rango}
+    end
+  end
+
+  defp verificar_defectos(defectos) do
+    if is_number(defectos) and defectos >= 0 and defectos <= 100 do
+      :ok
+    else
+      {:error, :porcentaje_invalido}
     end
   end
 end
