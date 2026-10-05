@@ -24,7 +24,7 @@ defmodule Programa do
       7. Total que debe pagar el taller durante la semana y costo promedio pagado por
       8. Confeccionistas que elaboraron al menos un lote válido en todas las
       9. agregar lote adicional
-      9. Salir
+      10. Salir
     """)
 
     opcion = Util.ingresar("Seleccione una opcion: ", :texto)
@@ -115,7 +115,11 @@ defmodule Programa do
 
     lote_adicional = Util.ingresar("Ingrese un lote adicional (confeccionista;linea;dia;prendas;defectos) Ej: C03;L2;4;85;3.5 \n", :texto)
 
-    lotes = lotes ++ [lote_adicional]
+    lote = Validacion.lote_adicional(lote_adicional)
+
+    lotes = lotes ++ [lote]
+
+    Util.mostrar_mensaje(lote)
 
     main(lotes)
   end
