@@ -1,4 +1,13 @@
 defmodule Validacion do
+  @moduledoc """
+  Módulo encargado del filtrado y verificación de reglas de negocio para los lotes de producción.
+  Garantiza la integridad de los datos procesados por el taller.
+  """
+
+  @doc """
+  Procesa la lista completa de lotes separándolos en válidos y rechazados.
+  Permite además la captura e integración opcional de un lote adicional por consola.
+  """
   def validar_lotes(lotes, confeccionistas, lineas) do
     {lista_validos, lista_invalidos} =
       Enum.reduce(lotes, {[], []}, fn lote, {lista_validos, lista_invalidos} ->
@@ -20,8 +29,7 @@ defmodule Validacion do
         end
       end)
 
-    texto = IO.gets("Ingrese un lote adicional (confeccionista;linea;dia;prendas;defectos)
-            o Enter para omitir:")
+    texto = IO.gets("Ingrese un lote adicional (confeccionista;linea;dia;prendas;defectos)\no Enter para omitir:")
 
     lote_adicion =
       case String.trim(texto) do
@@ -50,6 +58,10 @@ defmodule Validacion do
     end
   end
 
+  @doc """
+  Parsea una cadena delimitada por punto y coma (`;`) para construir la estructura de un lote
+  y ejecutar posteriormente sus validaciones.
+  """
   def lote_adicional(texto, confeccionistas, lineas) when is_binary(texto) do
     campos = texto |> String.split(";") |> Enum.map(&String.trim/1)
 
@@ -84,6 +96,9 @@ defmodule Validacion do
     end
   end
 
+  @doc """
+  Evalúa de forma secuencial un lote individual aplicando cortocircuito con la macro `with`.
+  """
   def validar_lote(lote, confeccionistas, lineas) do
     resultado =
       with {:ok, lote} <- validar_confeccionista(lote, confeccionistas),
@@ -103,6 +118,9 @@ defmodule Validacion do
     end
   end
 
+  @doc """
+  Verifica que el confeccionista del lote se encuentre registrado en la lista global.
+  """
   def validar_confeccionista(lote, confeccionistas) do
     if Enum.any?(confeccionistas, fn x -> x.codigo == lote.confeccionista end) do
       {:ok, lote}
@@ -111,6 +129,9 @@ defmodule Validacion do
     end
   end
 
+  @doc """
+  Verifica que la línea de producción del lote exista en la lista oficial del taller.
+  """
   def validar_linea(lote, lineas) do
     if Enum.any?(lineas, fn x -> x.id == lote.linea end) do
       {:ok, lote}
@@ -119,6 +140,9 @@ defmodule Validacion do
     end
   end
 
+  @doc """
+  Valida que el día asignado sea un entero dentro del rango hábil (1 a 6).
+  """
   def validar_dia(lote) do
     if is_integer(lote.dia) do
       if lote.dia >= 1 and lote.dia <= 6 do
@@ -131,6 +155,9 @@ defmodule Validacion do
     end
   end
 
+  @doc """
+  Valida que la cantidad de prendas sea un entero dentro del rango permitido (1 a 180 prendas).
+  """
   def validar_prendas_rango(lote) do
     if is_integer(lote.prendas) do
       if lote.prendas >= 1 and lote.prendas <= 180 do
@@ -143,9 +170,12 @@ defmodule Validacion do
     end
   end
 
+  @doc """
+  Valida que el porcentaje de defectos sea un dato de tipo `Float` y esté dentro del rango de 0% a 100%.
+  """
   def validar_porcentaje(lote) do
     if is_float(lote.defectos) do
-      if lote.defectos >= 0 and lote.prendas <= 100 do
+      if lote.defectos >= 0 and lote.defectos <= 100 do
         {:ok, lote}
       else
         {:error, :porcentaje_invalido, lote}
@@ -155,9 +185,11 @@ defmodule Validacion do
     end
   end
 
+  @doc """
+  Ofrece la interfaz por consola para agregar interactivamente un lote individual dinámico.
+  """
   def agregar_lote_adicional(confeccionistas, lineas) do
-    texto = IO.gets("Ingrese un lote adicional (confeccionista;linea;dia;prendas;defectos)
-            o Enter para omitir:")
+    texto = IO.gets("Ingrese un lote adicional (confeccionista;linea;dia;prendas;defectos)\no Enter para omitir:")
 
     lote_adicion =
       case String.trim(texto) do
@@ -171,9 +203,7 @@ defmodule Validacion do
 
     case lote_adicion do
       :omitido -> :omitido
-
       {:ok, lote_adicion} -> {lote_adicion}
-
       {:error, motivo, lote_adicion} -> {motivo, lote_adicion}
     end
   end
