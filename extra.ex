@@ -1,5 +1,12 @@
 defmodule Extra do
+  @moduledoc """
+  Módulo de demostración para los requerimientos de investigación técnica C.1 y C.2.
+  """
 
+  @doc """
+  Investigación C.1: Muestra ejemplos de llamadas a `Reportes.ranking/2` utilizando
+  diferentes combinaciones de Keyword Lists para modificar el ordenamiento y límite.
+  """
   def demostrar_c1(liquidaciones) do
     Util.mostrar_mensaje("===============================================================")
     Util.mostrar_mensaje("C.1 PRUEBAS DE RANKING CON KEYWORD LISTS")
@@ -28,6 +35,10 @@ defmodule Extra do
     )
   end
 
+  @doc """
+  Investigación C.2: Muestra la integración de datos de producción propia con los de un taller
+  aliado utilizando la función de fusión con resolución de conflictos `Map.merge/3`.
+  """
   def demostrar_c2(lotes_validos) do
     Util.mostrar_mensaje("===============================================================")
     Util.mostrar_mensaje("C.2 COMBINACIÓN DE PRODUCCIÓN CON TALLER ALIADO (Map.merge/3)")
@@ -52,5 +63,4 @@ defmodule Extra do
     Util.mostrar_mensaje("Taller Aliado     : #{inspect(taller_aliado)}")
     Util.mostrar_mensaje("Combinado         : #{inspect(combinado)}\n")
   end
-
 end
