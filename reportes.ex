@@ -1,10 +1,13 @@
 defmodule Reportes do
   @moduledoc """
-  Generación textual de Reportes R1 a R8 y función de ranking C.1.
+  Módulo de generación de reportes textuales analíticos (R1 a R8),
+  ordenamiento dinámico por Keyword Lists (C.1) y comprobantes individuales.
   """
 
+  @doc """
+  Reporte R1: Agrupa y resume los lotes rechazados especificando el motivo del fallo y el detalle de cada lote.
+  """
   def generar_r1(lotes_rechazados) do
-
     conteo_motivos =
       Enum.reduce(lotes_rechazados, %{}, fn {motivo, _lote}, acc ->
         Map.update(acc, motivo, 1, &(&1 + 1))
@@ -32,6 +35,9 @@ defmodule Reportes do
     """
   end
 
+  @doc """
+  Reporte R2: Muestra la producción de prendas por línea de taller y la productividad por puesto ocupado.
+  """
   def generar_r2(lineas_list, lotes_validos) do
     resumen =
       for linea <- lineas_list do
@@ -63,6 +69,9 @@ defmodule Reportes do
     """
   end
 
+  @doc """
+  Reporte R3: Evalúa la producción acumulada del taller contra la meta diaria de 600 prendas.
+  """
   def generar_r3(lotes_validos) do
     meta_diaria = 600
 
@@ -97,13 +106,16 @@ defmodule Reportes do
     """
   end
 
+  @doc """
+  Reporte R4: Muestra la liquidación final ordenada en forma descendente por pago neto.
+  """
   def generar_r4(liquidaciones) do
     ranking = Enum.sort_by(liquidaciones, & &1.pago_neto, :desc)
 
     filas =
       for {c, idx} <- Enum.with_index(ranking, 1) do
         num = String.pad_leading(Integer.to_string(idx), 2, " ")
-        "#{num}. [#{c.codigo}] #{String.pad_trailing(c.nombre, 18)} | Prendas: #{String.pad_leading(Integer.to_string(c.prendas), 4)} | Valor Lotes: $#{Util.formatear_moneda(c.valor_bruto)} | Bono: $#{Util.formatear_moneda(c.bonificaciones)} | Alq: -$#{Util.formatear_moneda(c.alquiler_descuento)} | NETO: $#{Util.formatear_moneda(c.pago_neto)}"
+        "#{num}. [#{c.codigo}] #{String.pad_trailing(c.nombre, 18)} | Prendas: #{String.pad_leading(Integer.to_string(c.prendas), 4)} | Valor Lotes: $#{Util.formatear_moneda(c.valor_bruto)} \vert{} Bono: $#{Util.formatear_moneda(c.bonificaciones)} | Alq: -$#{Util.formatear_moneda(c.alquiler_descuento)} \vert{} NETO: $#{Util.formatear_moneda(c.pago_neto)}"
       end
 
     """
@@ -114,6 +126,9 @@ defmodule Reportes do
     """
   end
 
+  @doc """
+  Reporte R5: Identifica los confeccionistas de mayor producción día a día y determina al líder semanal.
+  """
   def generar_r5(confeccionistas_list, lotes_validos) do
     ganadores_por_dia =
       for dia <- 1..6 do
@@ -185,6 +200,10 @@ defmodule Reportes do
     """
   end
 
+  @doc """
+  Reporte R6: Determina al confeccionista con mejor calidad (menor % de defectos ponderado por prendas).
+  Requiere al menos 3 lotes válidos para calificar.
+  """
   def generar_r6(confeccionistas_list, lotes_validos) do
     calificados =
       for conf <- confeccionistas_list do
@@ -231,6 +250,9 @@ defmodule Reportes do
     end
   end
 
+  @doc """
+  Reporte R7: Muestra el total de la nómina semanal pagada y el costo medio asumido por el taller por cada prenda válida.
+  """
   def generar_r7(liquidaciones, lotes_validos) do
     total_pagado = Enum.sum(for c <- liquidaciones, do: c.pago_neto)
     total_prendas_validas = Enum.sum(for l <- lotes_validos, do: l.prendas)
@@ -253,6 +275,9 @@ defmodule Reportes do
     """
   end
 
+  @doc """
+  Reporte R8: Lista a los confeccionistas polivalentes que operaron en todas las líneas de producción.
+  """
   def generar_r8(confeccionistas_list, lineas_list, lotes_validos) do
     total_lineas = Enum.count(lineas_list)
 
@@ -287,6 +312,10 @@ defmodule Reportes do
     """
   end
 
+  @doc """
+  Punto de investigación C.1: Función flexible de ranking que recibe una Keyword List
+  opcional con claves como `:campo`, `:orden` y `:limite`.
+  """
   def ranking(liquidaciones, opts \\ []) do
     campo = Keyword.get(opts, :campo, :neto)
     orden = Keyword.get(opts, :orden, :desc)
@@ -303,6 +332,9 @@ defmodule Reportes do
     Enum.take(ordenados, limite)
   end
 
+  @doc """
+  Busca e imprime en consola el desglose detallado del pago (comprobante individual B.5) para un confeccionista dado.
+  """
   def generar_comprobante_individual_consola(liquidaciones, confeccionistas_list) do
     Util.mostrar_mensaje("===============================================================")
     Util.mostrar_mensaje("B.5 COMPROBANTE INDIVIDUAL DE LIQUIDACIÓN")
@@ -358,5 +390,4 @@ defmodule Reportes do
         """)
     end
   end
-
 end
