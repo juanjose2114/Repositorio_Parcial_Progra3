@@ -1,39 +1,44 @@
 defmodule Validacion do
   def validar_lotes(lotes, confeccionistas, lineas) do
-     {lista_validos, lista_invalidos} =
+    {lista_validos, lista_invalidos} =
       Enum.reduce(lotes, {[], []}, fn lote, {lista_validos, lista_invalidos} ->
-       resultado =
-         with {:ok, lote} <- validar_confeccionista(lote, confeccionistas),
-              {:ok, lote} <- validar_linea(lote, lineas),
-              {:ok, lote} <- validar_dia(lote),
-              {:ok, lote} <- validar_prendas_rango(lote),
-              {:ok, lote} <- validar_porcentaje(lote) do
-           {:ok, lote}
-         end
+        resultado =
+          with {:ok, lote} <- validar_confeccionista(lote, confeccionistas),
+               {:ok, lote} <- validar_linea(lote, lineas),
+               {:ok, lote} <- validar_dia(lote),
+               {:ok, lote} <- validar_prendas_rango(lote),
+               {:ok, lote} <- validar_porcentaje(lote) do
+            {:ok, lote}
+          end
 
-       case resultado do
-         {:ok, lote} ->
-           {[{:ok, lote} | lista_validos], lista_invalidos}
-         {:error, motivo, lote} ->
-           {lista_validos, [{:error, motivo, lote} | lista_invalidos]}
-       end
-     end)
+        case resultado do
+          {:ok, lote} ->
+            {[{:ok, lote} | lista_validos], lista_invalidos}
+
+          {:error, motivo, lote} ->
+            {lista_validos, [{:error, motivo, lote} | lista_invalidos]}
+        end
+      end)
 
     texto = IO.gets("Ingrese un lote adicional (confeccionista;linea;dia;prendas;defectos)
             o Enter para omitir:")
 
     lote_adicion =
       case String.trim(texto) do
-        "" -> IO.puts("Se omitio el lote adicional...")
-        :omitido
-        texto -> lote_adicional(texto, confeccionistas, lineas)
+        "" ->
+          IO.puts("Se omitio el lote adicional...")
+          :omitido
+
+        texto ->
+          lote_adicional(texto, confeccionistas, lineas)
       end
 
     case lote_adicion do
+      :omitido ->
+        {lista_validos, lista_invalidos}
 
-      :omitido -> {lista_validos, lista_invalidos}
-
-      {:error, :formato_invalido} -> {lista_validos, lista_invalidos}
+      {:error, :formato_invalido} ->
+        {lista_validos, lista_invalidos}
 
       {:ok, lote_adicion} ->
         IO.puts("Lote validado y agregado correctamente...")
@@ -147,6 +152,29 @@ defmodule Validacion do
       end
     else
       {:error, :porcentaje_invalido, lote}
+    end
+  end
+
+  def agregar_lote_adicional(confeccionistas, lineas) do
+    texto = IO.gets("Ingrese un lote adicional (confeccionista;linea;dia;prendas;defectos)
+            o Enter para omitir:")
+
+    lote_adicion =
+      case String.trim(texto) do
+        "" ->
+          IO.puts("Se omitio el lote adicional...")
+          :omitido
+
+        texto ->
+          lote_adicional(texto, confeccionistas, lineas)
+      end
+
+    case lote_adicion do
+      :omitido -> :omitido
+
+      {:ok, lote_adicion} -> {lote_adicion}
+
+      {:error, motivo, lote_adicion} -> {motivo, lote_adicion}
     end
   end
 end

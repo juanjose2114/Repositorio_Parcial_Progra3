@@ -4,8 +4,9 @@ defmodule Reportes do
   """
 
   def generar_r1(lotes_rechazados) do
+
     conteo_motivos =
-      Enum.reduce(lotes_rechazados, %{}, fn {_lote, motivo}, acc ->
+      Enum.reduce(lotes_rechazados, %{}, fn {motivo, _lote}, acc ->
         Map.update(acc, motivo, 1, &(&1 + 1))
       end)
 
@@ -15,8 +16,8 @@ defmodule Reportes do
       end
 
     detalle_lotes =
-      for {lote, motivo} <- lotes_rechazados do
-        "   - Lote Conf: #{lote[:confeccionista]} | Línea: #{lote[:linea]} | Día: #{lote[:dia]} | Motivo: #{motivo}"
+      for {motivo, lote} <- lotes_rechazados do
+        "   - Lote Conf: #{lote[:confeccionista]} | Línea: #{lote[:linea]} | Día: #{lote[:dia]} | Prendas: #{lote[:prendas]} | Defectos: #{lote[:defectos]} |Motivo: #{motivo}"
       end
 
     """
@@ -301,4 +302,61 @@ defmodule Reportes do
     ordenados = Enum.sort_by(liquidaciones, &Map.get(&1, llave_orden), orden)
     Enum.take(ordenados, limite)
   end
+
+  def generar_comprobante_individual_consola(liquidaciones, confeccionistas_list) do
+    Util.mostrar_mensaje("===============================================================")
+    Util.mostrar_mensaje("B.5 COMPROBANTE INDIVIDUAL DE LIQUIDACIÓN")
+    Util.mostrar_mensaje("===============================================================")
+
+    codigo =
+      Util.ingresar_texto(
+        "Ingrese el código del confeccionista para generar comprobante (ej: C01): "
+      )
+
+    case Enum.find(liquidaciones, &(&1.codigo == codigo)) do
+      nil ->
+        Util.mostrar_mensaje(" [ERROR] El confeccionista con código '#{codigo}' no existe.")
+
+      c ->
+        conf_info = Enum.find(confeccionistas_list, &(&1.codigo == c.codigo))
+
+        dias_validos =
+          c.lotes
+          |> Enum.map(& &1.dia)
+          |> Enum.uniq()
+          |> Enum.sort()
+
+        detalles_dias =
+          for dia <- dias_validos do
+            lotes_dia = Enum.filter(c.lotes, &(&1.dia == dia))
+            prendas_dia = Enum.sum(for l <- lotes_dia, do: l.prendas)
+            valor_lotes_dia = Enum.sum(for l <- lotes_dia, do: Liquidacion.calcular_valor_lote(l))
+            bono_dia = if prendas_dia >= 120, do: 18000, else: 0
+
+            "   * Día #{dia}: #{prendas_dia} prendas | Valor Lotes: $#{Util.formatear_moneda(valor_lotes_dia)} | Bono Día: $#{Util.formatear_moneda(bono_dia)}"
+          end
+
+        Util.mostrar_mensaje("""
+
+        ---------------------------------------------------------------
+        COMPROBANTE DE PAGO INDIVIDUAL - TALLER DE CONFECCIONES
+        ---------------------------------------------------------------
+        Confeccionista : #{c.nombre} (#{c.codigo})
+        Usa Máquina    : #{if conf_info.alquiler, do: "SÍ ($15.000/día)", else: "NO"}
+        Días Trabajados: #{c.dias_trabajados} día(s)
+
+        DETALLE POR DÍA TRABAJADO:
+        #{if Enum.empty?(detalles_dias), do: "   (Sin días trabajados con lotes válidos)", else: Enum.join(detalles_dias, "\n")}
+
+        RESUMEN FINANCIERO:
+        (+) Suma Valor de Lotes   : $#{Util.formatear_moneda(c.valor_bruto)}
+        (+) Bonificaciones Totales: $#{Util.formatear_moneda(c.bonificaciones)}
+        (-) Descuento Alquiler    : $#{Util.formatear_moneda(c.alquiler_descuento)}
+        ---------------------------------------------------------------
+        (=) PAGO NETO LIQUIDADO   : $#{Util.formatear_moneda(c.pago_neto)}
+        ---------------------------------------------------------------
+        """)
+    end
+  end
+
 end
