@@ -11,4 +11,5 @@ cd (nombre_de_la_carpeta)
 
 elixir (nombre_del_archivo).exs
 
-iex.bat -r "*.ex*" -e "Programa.main()"
+iex.bat -r "* .ex *" programa.exs
+
