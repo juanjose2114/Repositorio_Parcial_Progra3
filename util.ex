@@ -7,6 +7,12 @@ defmodule Util do
     IO.puts(mensaje)
   end
 
+  def ingresar(mensaje,:texto )do
+    mensaje
+    |>IO.gets()
+    |>String.trim()
+  end
+
   def ingresar_texto(mensaje) do
     mensaje
     |> IO.gets()
